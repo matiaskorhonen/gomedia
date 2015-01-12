@@ -1,15 +1,34 @@
 package main
 
 import (
+	"encoding/json"
+	"flag"
 	"fmt"
-	"io"
+	"math/rand"
 	"net/http"
-	"os"
 	"regexp"
+	"strconv"
+	"time"
 
+	"github.com/mitchellh/goamz/aws"
+	"github.com/mitchellh/goamz/s3"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 )
+
+// type MediaResponse {
+// 	MediaURL string
+// }
+
+var (
+	bucketName string
+	baseURL    string
+)
+
+func init() {
+	flag.StringVar(&bucketName, "b", "", "Bucket Name")
+	flag.StringVar(&baseURL, "u", "", "Base URL")
+}
 
 func rootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Nothing to see here!")
@@ -18,32 +37,53 @@ func rootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm(r.ContentLength)
 
-	message := r.Form["message"]
-	source := r.Form["source"]
+	// message := r.Form["message"]
+	// source := r.Form["source"]
 	file, header, err := r.FormFile("media")
 	defer file.Close()
 
 	if err != nil {
-		fmt.Fprintln(w, err)
-		return
+		panic(err.Error())
 	}
 
-	out, err := os.Create(header.Filename)
+	timeStamp := time.Now().Unix()
+	random := rand.Intn(999999)
+	filename := fmt.Sprintf("%x-%x-%s", timeStamp, random, header.Filename)
+
+	auth, err := aws.EnvAuth()
 	if err != nil {
-		fmt.Fprintf(w, "Failed to open the file for writing")
-		return
+		panic(err.Error())
 	}
 
-	defer out.Close()
+	// Open Bucket
+	s := s3.New(auth, aws.EUWest)
+	bucket := s.Bucket(bucketName)
 
-	_, err = io.Copy(out, file)
+	path := fmt.Sprintf("tweetbot/%s", filename)
 
+	contentLength, err := strconv.Atoi(header.Header.Get("Content-Length"))
 	if err != nil {
-		fmt.Fprintln(w, err)
+		panic(err.Error())
 	}
 
-	fmt.Fprintf(w, "Tweetbot! %s (%s)", message, source)
-	fmt.Fprintf(w, "File %s uploaded successfully.", header.Filename)
+	buffer := make([]byte, contentLength)
+	cBytes, err := file.Read(buffer)
+
+	err = bucket.Put(path, buffer[0:cBytes], header.Header.Get("Content-Type"), s3.PublicRead)
+	if err != nil {
+		panic(err.Error())
+	}
+
+	url := fmt.Sprintf("%s/%s", baseURL, path)
+
+	fmt.Printf("\nFile %s (%s) uploaded successfully.\n", header.Filename, header.Header)
+
+	responseMap := map[string]string{"url": url}
+	jsonResponse, _ := json.Marshal(responseMap)
+	fmt.Println(string(jsonResponse))
+
+	w.Header().Set("Content-Type", "application/json")
+	fmt.Fprintf(w, string(jsonResponse))
 }
 
 func main() {
