@@ -69,7 +69,9 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	buffer := make([]byte, contentLength)
 	cBytes, err := file.Read(buffer)
 
-	err = bucket.Put(path, buffer[0:cBytes], header.Header.Get("Content-Type"), s3.PublicRead)
+	s3Headers := map[string][]string{"Content-Type": {header.Header.Get("Content-Type")}, "Cache-Control": {"public, max-age=315360000"}}
+
+	err = bucket.PutHeader(path, buffer[0:cBytes], s3Headers, s3.PublicRead)
 	if err != nil {
 		panic(err.Error())
 	}
