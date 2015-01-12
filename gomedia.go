@@ -16,10 +16,6 @@ import (
 	"github.com/zenazn/goji/web"
 )
 
-// type MediaResponse {
-// 	MediaURL string
-// }
-
 var (
 	bucketName string
 	baseURL    string
