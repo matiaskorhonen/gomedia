@@ -5,8 +5,10 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"math/rand"
+	"math/big"
+	"mime"
 	"net/http"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"time"
@@ -14,6 +16,7 @@ import (
 	"github.com/crowdmob/goamz/aws"
 	"github.com/crowdmob/goamz/s3"
 	"github.com/goji/httpauth"
+	"github.com/tv42/base58"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 )
@@ -55,12 +58,22 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	}
 
 	originalFilename := part.FileName()
-	timeStamp := time.Now().Unix()
-	randomValue := rand.Intn(999999)
-	filename := fmt.Sprintf("%x-%x-%s", timeStamp, randomValue, originalFilename)
-	path := fmt.Sprintf("tweetbot/%s", filename)
+	fileExt := filepath.Ext(originalFilename)
+	unixTime := time.Now().UTC().Unix()
+	b58buf := base58.EncodeBig(nil, big.NewInt(unixTime))
+
+	filename := fmt.Sprintf("%s%s", b58buf, fileExt)
+	path := "tweetbot/" + filename
 
 	contentType := part.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = mime.TypeByExtension(fileExt)
+
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+	}
+
 	contentLength, err := strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -72,7 +85,7 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 		panic(err.Error())
 	}
 
-	fmt.Printf("\nFile %s (%s) uploaded successfully.\n", originalFilename, path)
+	// fmt.Printf("\nFile %s (%s) uploaded successfully.\n", originalFilename, path)
 
 	url := fmt.Sprintf("%s/%s", baseURL, path)
 
