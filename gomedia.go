@@ -47,6 +47,7 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	s := s3.New(auth, aws.EUWest)
 	bucket := s.Bucket(bucketName)
 
+	// We only want the first part, the media
 	part, err := multiReader.NextPart()
 	if err == io.EOF {
 		http.Error(w, err.Error(), http.StatusBadRequest)
