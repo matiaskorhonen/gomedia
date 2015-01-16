@@ -8,7 +8,7 @@ Tweetbot custom media endpoint for uploads to S3
 
 ```sh
 go get github.com/laher/goxc
-goxc -os="linux" -arch="amd64" -d=./build
+goxc -os="linux" -arch="amd64" -d=./build -tasks-="downloads-page,deb,deb-dev,go-test,go-vet"
 ```
 
 ### Deploy with Heroku Anvil
@@ -36,7 +36,7 @@ See below for the required environment variables on Heroku.
 ### Everything together
 
 ```sh
-goxc -os="linux" -arch="amd64" -d=./build &&
+goxc -os="linux" -arch="amd64" -d=./build -tasks-="downloads-page,deb,deb-dev,go-test,go-vet" &&
 tar -xf ./build/snapshot/gomedia_linux_amd64.tar.gz -C ./slug --strip-components=1 &&
 heroku build ./slug -r gomedia
 ```
