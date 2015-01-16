@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/crowdmob/goamz/aws"
@@ -43,26 +42,33 @@ func openBucket() (*s3.Bucket, error) {
 	return bucket, nil
 }
 
-func readerToS3(ioReader io.Reader, basePath string, originalFilename string, prependOriginalFilename bool, contentType string, contentLength int64) (string, error) {
+func readerToS3(ioReader io.Reader, basePath string, originalFilename string, generateNewFileName bool, contentType string, contentLength int64) (string, error) {
 	bucket, err := openBucket()
 	if err != nil {
 		return "", err
 	}
 
 	fileExt := filepath.Ext(originalFilename)
-	unixTime := time.Now().UTC().Unix()
-	b58buf := base58.EncodeBig(nil, big.NewInt(unixTime))
 
 	var filename string
 
-	if prependOriginalFilename {
-		name := strings.TrimSuffix(originalFilename, fileExt)
-		filename = fmt.Sprintf("%s-%s%s", name, b58buf, fileExt)
-	} else {
+	if generateNewFileName {
+		unixTime := time.Now().UTC().Unix()
+		b58buf := base58.EncodeBig(nil, big.NewInt(unixTime))
 		filename = fmt.Sprintf("%s%s", b58buf, fileExt)
+	} else {
+		filename = originalFilename
 	}
 
 	path := basePath + filename
+
+	if contentType == "" || contentType == "application/octet-stream" {
+		contentType = mime.TypeByExtension(fileExt)
+
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+	}
 
 	err = bucket.PutReader(path, ioReader, contentLength, contentType, s3.PublicRead, s3.Options{CacheControl: "public, max-age=315360000"})
 	if err != nil {
@@ -78,21 +84,13 @@ func uploadPartToS3(part *multipart.Part, basePath string) (string, error) {
 	originalFilename := part.FileName()
 
 	contentType := part.Header.Get("Content-Type")
-	if contentType == "" {
-		fileExt := filepath.Ext(originalFilename)
-		contentType = mime.TypeByExtension(fileExt)
-
-		if contentType == "" || contentType == "application/octet-stream" {
-			contentType = "application/octet-stream"
-		}
-	}
 
 	contentLength, err := strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
 		return "", err
 	}
 
-	url, err := readerToS3(part, basePath, originalFilename, false, contentType, contentLength)
+	url, err := readerToS3(part, basePath, originalFilename, true, contentType, contentLength)
 
 	return url, err
 }
@@ -140,24 +138,20 @@ func webDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 	originalFilename := c.URLParams["name"]
 
 	contentType := r.Header.Get("Content-Type")
-	if contentType == "" || contentType == "application/octet-stream" {
-		fileExt := filepath.Ext(originalFilename)
-		contentType = mime.TypeByExtension(fileExt)
-
-		if contentType == "" {
-			contentType = "application/octet-stream"
-		}
-	}
 
 	basePath := ""
 
-	url, err := readerToS3(r.Body, basePath, originalFilename, true, contentType, r.ContentLength)
+	url, err := readerToS3(r.Body, basePath, originalFilename, false, contentType, r.ContentLength)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
 	http.Redirect(w, r, url, http.StatusCreated)
+}
+
+func webDavDelete(c web.C, w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Deleting files is not supported", http.StatusNotImplemented)
 }
 
 func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
@@ -191,6 +185,7 @@ func main() {
 	goji.Get("/", rootHandler)
 
 	goji.Put("/:name", webDavUpload)
+	goji.Delete("/:name", webDavDelete)
 
 	re := regexp.MustCompile(`\A/tweetbot/?\z`)
 	goji.Post(re, tweetbot)
