@@ -202,14 +202,14 @@ func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
 }
 
 func main() {
-	goji.Use(PropfindInterceptHeader)
-
 	username := os.Getenv("HTTP_USER")
 	password := os.Getenv("HTTP_PASSWORD")
 
 	if username != "" && password != "" {
 		goji.Use(httpauth.SimpleBasicAuth(username, password))
 	}
+
+	goji.Use(PropfindInterceptHeader)
 
 	goji.Get("/", RootHandler)
 
