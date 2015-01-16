@@ -26,7 +26,7 @@ Cross compile the app as described above, then build and release the slug using 
 tar -xf ./build/snapshot/gomedia_linux_amd64.tar.gz -C ./slug --strip-components=1
 
 # Compile slug and release
-heroku build ./slug -r gomedia
+heroku build ./slug -b https://github.com/ryandotsmith/null-buildpack.git -r gomedia
 ```
 
 (replace **gomedia** with the name of your Heroku app)

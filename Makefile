@@ -5,4 +5,4 @@ extractbin:
 	tar -xf ./build/snapshot/gomedia_linux_amd64.tar.gz -C ./slug --strip-components=1
 
 deploy: build extractbin
-	heroku build ./slug -r ${APP}
+	heroku build ./slug -b https://github.com/ryandotsmith/null-buildpack.git -r ${APP}
