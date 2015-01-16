@@ -35,7 +35,7 @@ See below for the required environment variables on Heroku.
 
 ### Everything together
 
-Just run `make APP=myherokuappname`
+Just run `make deploy APP=myherokuappname`
 
 ### Environment Variables / Configuration
 
