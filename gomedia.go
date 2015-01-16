@@ -9,6 +9,7 @@ import (
 	"mime"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strconv"
@@ -32,7 +33,7 @@ func init() {
 	flag.StringVar(&baseURL, "u", "", "Base URL")
 }
 
-func openBucket() (*s3.Bucket, error) {
+func OpenBucket() (*s3.Bucket, error) {
 	auth, err := aws.EnvAuth()
 	if err != nil {
 		return nil, err
@@ -42,8 +43,8 @@ func openBucket() (*s3.Bucket, error) {
 	return bucket, nil
 }
 
-func readerToS3(ioReader io.Reader, basePath string, originalFilename string, generateNewFileName bool, contentType string, contentLength int64) (string, error) {
-	bucket, err := openBucket()
+func ReaderToS3(ioReader io.Reader, basePath string, originalFilename string, generateNewFileName bool, contentType string, contentLength int64) (string, error) {
+	bucket, err := OpenBucket()
 	if err != nil {
 		return "", err
 	}
@@ -80,7 +81,7 @@ func readerToS3(ioReader io.Reader, basePath string, originalFilename string, ge
 	return url, nil
 }
 
-func uploadPartToS3(part *multipart.Part, basePath string) (string, error) {
+func UploadPartToS3(part *multipart.Part, basePath string) (string, error) {
 	originalFilename := part.FileName()
 
 	contentType := part.Header.Get("Content-Type")
@@ -90,16 +91,16 @@ func uploadPartToS3(part *multipart.Part, basePath string) (string, error) {
 		return "", err
 	}
 
-	url, err := readerToS3(part, basePath, originalFilename, true, contentType, contentLength)
+	url, err := ReaderToS3(part, basePath, originalFilename, true, contentType, contentLength)
 
 	return url, err
 }
 
-func rootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
+func RootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Nothing to see here!")
 }
 
-func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
+func Tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	multiReader, err := r.MultipartReader()
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -116,7 +117,7 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	url, err := uploadPartToS3(part, "tweetbot/")
+	url, err := UploadPartToS3(part, "tweetbot/")
 	if err != nil {
 		panic(err.Error())
 	}
@@ -128,7 +129,7 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResponse))
 }
 
-func webDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
+func WebDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 	// Ensure that the Content-Length is set
 	if r.ContentLength < 1 {
 		http.Error(w, "Content-Length must be set", http.StatusBadRequest)
@@ -141,7 +142,7 @@ func webDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	basePath := ""
 
-	url, err := readerToS3(r.Body, basePath, originalFilename, false, contentType, r.ContentLength)
+	url, err := ReaderToS3(r.Body, basePath, originalFilename, false, contentType, r.ContentLength)
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -150,7 +151,7 @@ func webDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusCreated)
 }
 
-func webDavDelete(c web.C, w http.ResponseWriter, r *http.Request) {
+func WebDavDelete(c web.C, w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Deleting files is not supported", http.StatusNotImplemented)
 }
 
@@ -180,15 +181,21 @@ func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
 
 func main() {
 	goji.Use(PropfindInterceptHeader)
-	goji.Use(httpauth.SimpleBasicAuth("x", "password"))
 
-	goji.Get("/", rootHandler)
+	username := os.Getenv("HTTP_USER")
+	password := os.Getenv("HTTP_PASSWORD")
 
-	goji.Put("/:name", webDavUpload)
-	goji.Delete("/:name", webDavDelete)
+	if username != "" && password != "" {
+		goji.Use(httpauth.SimpleBasicAuth(username, password))
+	}
+
+	goji.Get("/", RootHandler)
+
+	goji.Put("/:name", WebDavUpload)
+	goji.Delete("/:name", WebDavDelete)
 
 	re := regexp.MustCompile(`\A/tweetbot/?\z`)
-	goji.Post(re, tweetbot)
+	goji.Post(re, Tweetbot)
 
 	goji.Serve()
 }
