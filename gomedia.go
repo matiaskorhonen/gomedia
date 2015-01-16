@@ -7,10 +7,12 @@ import (
 	"io"
 	"math/big"
 	"mime"
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"regexp"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/crowdmob/goamz/aws"
@@ -31,6 +33,70 @@ func init() {
 	flag.StringVar(&baseURL, "u", "", "Base URL")
 }
 
+func openBucket() (*s3.Bucket, error) {
+	auth, err := aws.EnvAuth()
+	if err != nil {
+		return nil, err
+	}
+	s := s3.New(auth, aws.EUWest)
+	bucket := s.Bucket(bucketName)
+	return bucket, nil
+}
+
+func readerToS3(ioReader io.Reader, basePath string, originalFilename string, prependOriginalFilename bool, contentType string, contentLength int64) (string, error) {
+	bucket, err := openBucket()
+	if err != nil {
+		return "", err
+	}
+
+	fileExt := filepath.Ext(originalFilename)
+	unixTime := time.Now().UTC().Unix()
+	b58buf := base58.EncodeBig(nil, big.NewInt(unixTime))
+
+	var filename string
+
+	if prependOriginalFilename {
+		name := strings.TrimSuffix(originalFilename, fileExt)
+		filename = fmt.Sprintf("%s-%s%s", name, b58buf, fileExt)
+	} else {
+		filename = fmt.Sprintf("%s%s", b58buf, fileExt)
+	}
+
+	path := basePath + filename
+
+	err = bucket.PutReader(path, ioReader, contentLength, contentType, s3.PublicRead, s3.Options{CacheControl: "public, max-age=315360000"})
+	if err != nil {
+		return "", err
+	}
+
+	url := fmt.Sprintf("%s/%s", baseURL, path)
+
+	return url, nil
+}
+
+func uploadPartToS3(part *multipart.Part, basePath string) (string, error) {
+	originalFilename := part.FileName()
+
+	contentType := part.Header.Get("Content-Type")
+	if contentType == "" {
+		fileExt := filepath.Ext(originalFilename)
+		contentType = mime.TypeByExtension(fileExt)
+
+		if contentType == "" || contentType == "application/octet-stream" {
+			contentType = "application/octet-stream"
+		}
+	}
+
+	contentLength, err := strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
+	if err != nil {
+		return "", err
+	}
+
+	url, err := readerToS3(part, basePath, originalFilename, false, contentType, contentLength)
+
+	return url, err
+}
+
 func rootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Nothing to see here!")
 }
@@ -42,52 +108,20 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Open Bucket
-	auth, err := aws.EnvAuth()
-	if err != nil {
-		panic(err.Error())
-	}
-	s := s3.New(auth, aws.EUWest)
-	bucket := s.Bucket(bucketName)
-
 	// We only want the first part, the media
 	part, err := multiReader.NextPart()
-	if err == io.EOF {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
 
-	originalFilename := part.FileName()
-	fileExt := filepath.Ext(originalFilename)
-	unixTime := time.Now().UTC().Unix()
-	b58buf := base58.EncodeBig(nil, big.NewInt(unixTime))
-
-	filename := fmt.Sprintf("%s%s", b58buf, fileExt)
-	path := "tweetbot/" + filename
-
-	contentType := part.Header.Get("Content-Type")
-	if contentType == "" {
-		contentType = mime.TypeByExtension(fileExt)
-
-		if contentType == "" {
-			contentType = "application/octet-stream"
-		}
-	}
-
-	contentLength, err := strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
+	// Ensure that the Content-Length is set
+	_, err = strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	err = bucket.PutReader(path, part, contentLength, contentType, s3.PublicRead, s3.Options{CacheControl: "public, max-age=315360000"})
+	url, err := uploadPartToS3(part, "tweetbot/")
 	if err != nil {
 		panic(err.Error())
 	}
-
-	// fmt.Printf("\nFile %s (%s) uploaded successfully.\n", originalFilename, path)
-
-	url := fmt.Sprintf("%s/%s", baseURL, path)
 
 	responseMap := map[string]string{"url": url}
 	jsonResponse, _ := json.Marshal(responseMap)
@@ -96,12 +130,69 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResponse))
 }
 
+func webDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
+	// Ensure that the Content-Length is set
+	if r.ContentLength < 1 {
+		http.Error(w, "Content-Length must be set", http.StatusBadRequest)
+		return
+	}
+
+	originalFilename := c.URLParams["name"]
+
+	contentType := r.Header.Get("Content-Type")
+	if contentType == "" || contentType == "application/octet-stream" {
+		fileExt := filepath.Ext(originalFilename)
+		contentType = mime.TypeByExtension(fileExt)
+
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+	}
+
+	basePath := ""
+
+	url, err := readerToS3(r.Body, basePath, originalFilename, true, contentType, r.ContentLength)
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+
+	http.Redirect(w, r, url, http.StatusCreated)
+}
+
+func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == "PROPFIND" {
+			xml := "<?xml version=\"1.0\" ?>\n" +
+				"<D:multistatus xmlns:D=\"DAV:\">\n" +
+				"<D:response>\n" +
+				"<D:href>http://www.contoso.com/public/container/</D:href>\n" +
+				"<D:propstat>\n" +
+				"<D:status>HTTP/1.1 200 OK</D:status>\n" +
+				"</D:propstat>\n" +
+				"</D:response>\n" +
+				"</D:multistatus>\n"
+
+			w.WriteHeader(207)
+			w.Header().Set("Content-Type", "text/xml")
+			w.Write([]byte(xml))
+			return
+		}
+
+		h.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
 func main() {
+	goji.Use(PropfindInterceptHeader)
 	goji.Use(httpauth.SimpleBasicAuth("x", "password"))
 
 	goji.Get("/", rootHandler)
 
-	re := regexp.MustCompile("/tweetbot")
+	goji.Put("/:name", webDavUpload)
+
+	re := regexp.MustCompile(`\A/tweetbot/?\z`)
 	goji.Post(re, tweetbot)
 
 	goji.Serve()
