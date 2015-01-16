@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"fmt"
 	"io"
 	"math/big"
@@ -29,8 +28,21 @@ var (
 )
 
 func init() {
-	flag.StringVar(&bucketName, "b", "", "Bucket Name")
-	flag.StringVar(&baseURL, "u", "", "Base URL")
+	bucketName = os.Getenv("BUCKET_NAME")
+	baseURL = os.Getenv("BASE_URL")
+
+	if bucketName == "" {
+		fmt.Printf("BUCKET_NAME must be set\n")
+		os.Exit(1)
+	}
+
+	if baseURL == "" {
+		fmt.Printf("BASE_URL must be set\n")
+		os.Exit(1)
+	}
+
+	// Auth here to ensure that the keys are set
+	aws.EnvAuth()
 }
 
 func OpenBucket() (*s3.Bucket, error) {
