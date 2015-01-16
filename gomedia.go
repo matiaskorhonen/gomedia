@@ -20,6 +20,7 @@ import (
 	"github.com/tv42/base58"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
+	"github.com/zenazn/goji/web/middleware"
 )
 
 var (
@@ -202,6 +203,8 @@ func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
 }
 
 func main() {
+	goji.Use(middleware.RealIP)
+
 	username := os.Getenv("HTTP_USER")
 	password := os.Getenv("HTTP_PASSWORD")
 
