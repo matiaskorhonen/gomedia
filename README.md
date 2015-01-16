@@ -45,6 +45,7 @@ heroku build ./slug -r gomedia
 
 * `AWS_ACCESS_KEY_ID` — (required) self-explanatory
 * `AWS_SECRET_ACCESS_KEY` — (required) self-explanatory
+* `AWS_REGION` — (optional) the AWS region. Defaults to `us-east-1`
 * `BASE_URL` — (required) the base URL for generated URLs (no trailing slash)
     * Use the bucket URL if you don't have a CNAME
     * If you're using a custom CNAME (or a CDN) set it to the hostname (beginning with http or https)

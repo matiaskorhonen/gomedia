@@ -25,20 +25,21 @@ import (
 var (
 	bucketName string
 	baseURL    string
+	awsRegion  aws.Region
 )
 
 func init() {
 	bucketName = os.Getenv("BUCKET_NAME")
 	baseURL = os.Getenv("BASE_URL")
 
-	if bucketName == "" {
-		fmt.Printf("BUCKET_NAME must be set\n")
-		os.Exit(1)
-	}
-
-	if baseURL == "" {
-		fmt.Printf("BASE_URL must be set\n")
-		os.Exit(1)
+	if os.Getenv("AWS_REGION") == "" {
+		awsRegion = aws.GetRegion("us-east-1")
+	} else {
+		awsRegion = aws.GetRegion(os.Getenv("AWS_REGION"))
+		if awsRegion.Name == "" {
+			fmt.Printf("Unknown AWS region: " + os.Getenv("AWS_REGION") + "\n")
+			os.Exit(1)
+		}
 	}
 
 	// Auth here to ensure that the keys are set
@@ -50,7 +51,12 @@ func OpenBucket() (*s3.Bucket, error) {
 	if err != nil {
 		return nil, err
 	}
-	s := s3.New(auth, aws.EUWest)
+	s := s3.New(auth, awsRegion)
+
+	if bucketName == "" {
+		panic("BUCKET_NAME not set")
+	}
+
 	bucket := s.Bucket(bucketName)
 	return bucket, nil
 }
@@ -86,6 +92,10 @@ func ReaderToS3(ioReader io.Reader, basePath string, originalFilename string, ge
 	err = bucket.PutReader(path, ioReader, contentLength, contentType, s3.PublicRead, s3.Options{CacheControl: "public, max-age=315360000"})
 	if err != nil {
 		return "", err
+	}
+
+	if baseURL == "" {
+		panic("BASE_URL not set")
 	}
 
 	url := fmt.Sprintf("%s/%s", baseURL, path)
