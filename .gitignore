@@ -25,5 +25,5 @@ _testmain.go
 
 /build
 
-/slug/*.*
+/slug
 !/slug/Procfile
