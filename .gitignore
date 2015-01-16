@@ -23,5 +23,5 @@ _testmain.go
 *.test
 *.prof
 
-./build
-./build/gomedia
+./build/*
+!./build/Procfile
