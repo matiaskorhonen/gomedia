@@ -97,11 +97,13 @@ func ReaderToS3(ioReader io.Reader, basePath string, originalFilename string, ge
 		return "", err
 	}
 
-	if baseURL == "" {
-		panic("BASE_URL not set")
-	}
+	var url string
 
-	url := fmt.Sprintf("%s/%s", baseURL, path)
+	if baseURL == "" {
+		url = bucket.URL(path)
+	} else {
+		url = fmt.Sprintf("%s/%s", baseURL, path)
+	}
 
 	return url, nil
 }
