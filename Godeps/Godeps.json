@@ -1,0 +1,23 @@
+{
+	"ImportPath": "bitbucket.org/matiaskorhonen/gomedia",
+	"GoVersion": "go1.4",
+	"Deps": [
+		{
+			"ImportPath": "github.com/crowdmob/goamz/aws",
+			"Rev": "5fa6630638856d1dcc32b7770087baf30f6f93cf"
+		},
+		{
+			"ImportPath": "github.com/crowdmob/goamz/s3",
+			"Rev": "5fa6630638856d1dcc32b7770087baf30f6f93cf"
+		},
+		{
+			"ImportPath": "github.com/tv42/base58",
+			"Rev": "b6649477bfe6276322b4eeaae8f5e947b49cec92"
+		},
+		{
+			"ImportPath": "github.com/zenazn/goji",
+			"Comment": "v0.8.3",
+			"Rev": "dcb9598cbbcfcc10d2c1ee1e66958e54a2c84b52"
+		}
+	]
+}

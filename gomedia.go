@@ -14,11 +14,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/crowdmob/goamz/aws"
-	"github.com/crowdmob/goamz/s3"
-	"github.com/tv42/base58"
-	"github.com/zenazn/goji"
-	"github.com/zenazn/goji/web"
+	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
+	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
+	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
+	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji"
+	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
 )
 
 var (

@@ -4,47 +4,47 @@ Tweetbot custom media endpoint for uploads to S3
 
 ## Install/Build/Deploy
 
-### Cross compile for Heroku
+### Configure the buildpack
+
+If you're creating a new heroku app, set the buildpack on creation:
 
 ```sh
-go get github.com/laher/goxc
-goxc -os="linux" -arch="amd64" -d=./build -tasks-="downloads-page,deb,deb-dev,go-test,go-vet"
+heroku create -b https://github.com/kr/heroku-buildpack-go.git --region=eu
 ```
 
-### Deploy with Heroku Anvil
-
-Install the `heroku-anvil` plugin
+For an existing Heroku app, set the `BUILDPACK_URL`:
 
 ```sh
-heroku plugins:install https://github.com/ddollar/heroku-anvil
+heroku config:set BUILDPACK_URL=https://github.com/kr/heroku-buildpack-go.git
 ```
 
-Cross compile the app as described above, then build and release the slug using heroku-anvil.
+### Set environment variables
+
+GoMedia uses environment variables for configuration (see all available options below).
+
+Before pushing to Heroku, you should at the very least set the required options, e.g.
 
 ```sh
-# Extract the binary to the slug directory
-tar -xf ./build/snapshot/gomedia_linux_amd64.tar.gz -C ./slug --strip-components=1
-
-# Compile slug and release
-heroku build ./slug -b https://github.com/ryandotsmith/null-buildpack.git -r gomedia
+heroku config:set AWS_ACCESS_KEY_ID="…" AWS_SECRET_ACCESS_KEY="…"  \
+AWS_REGION="eu-west-1" BUCKET_NAME="mybucket"
 ```
 
-(replace **gomedia** with the name of your Heroku app)
+It is highly recommended that you also set a username and password (for the obvious reasons).
 
-See below for the required environment variables on Heroku.
+### Push to Heroku
 
-### Everything together
-
-Just run `make deploy APP=myherokuappname`
+```sh
+git push heroku master
+```
 
 ### Environment Variables / Configuration
 
 * `AWS_ACCESS_KEY_ID` — (required) self-explanatory
 * `AWS_SECRET_ACCESS_KEY` — (required) self-explanatory
 * `AWS_REGION` — (optional) the AWS region. Defaults to `us-east-1`
-* `BASE_URL` — (required) the base URL for generated URLs (no trailing slash)
-    * Use the bucket URL if you don't have a CNAME
-    * If you're using a custom CNAME (or a CDN) set it to the hostname (beginning with http or https)
 * `BUCKET_NAME` — (required) the name of your S3 bucket
+* `BASE_URL` — (optional) the base URL for generated URLs (no trailing slash)
+    * Defaults to the bucket url (e.g. `https://s3-eu-west-1.amazonaws.com/BUCKET_NAME/`)
+    * If you're using a custom CNAME (or a CDN) set it to the hostname (beginning with http or https)
 * `HTTP_PASSWORD` — (recommended) protect the upload end points with basic auth
 * `HTTP_USER` — (recommended) protect the upload end points with basic auth
