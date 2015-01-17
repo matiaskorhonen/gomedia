@@ -48,3 +48,33 @@ git push heroku master
     * If you're using a custom CNAME (or a CDN) set it to the hostname (beginning with http or https)
 * `HTTP_PASSWORD` — (recommended) protect the upload end points with basic auth
 * `HTTP_USER` — (recommended) protect the upload end points with basic auth
+
+## Use with Tweetbot
+
+GoMedia works as a [Custom Media Upload][custom] endpoint for Tweetbot (both iOS and OS X).
+
+All you need to do is set the custom endpoint URL to:
+
+```
+https://MYAPPNAME.herokuapp.com/tweetbot?username=USERNAME&password=PASSWORD
+```
+
+Replace `USERNAME` and `PASSWORD` with your own credentials and `MYAPPNAME` with your Heroku app name…
+
+![Tweetbot for Mac configuration][tweetbot-mac]
+
+![Tweetbot for iOS configuration][tweetbot-ios]
+
+[custom]: http://tapbots.net/tweetbot/custom_media/
+[tweetbot-mac]: http://shots.matiaskorhonen.fi/tweetbot-mac-gomedia_nibjww.png
+[tweetbot-ios]: http://shots.matiaskorhonen.fi/tweetbot-ios-gomedia_nibjwd.png
+
+## Use with Monosnap
+
+For monosnap you need to configure a WebDAV endpoint with the app URL and credentials. Do **not** set the port!
+
+![GoMedia Monosnap configuration][monoconf]
+
+You need to configure the Base URL in Monosnap regardless of whether you're using a custom base URL or not.
+
+[monoconf]: http://shots.matiaskorhonen.fi/monosnap-gomedia-configuration_nibjb9.png
