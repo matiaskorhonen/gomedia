@@ -1,1 +1,1 @@
-web: ./gomedia -bind=":$PORT"
+web: gomedia -bind=":$PORT"
