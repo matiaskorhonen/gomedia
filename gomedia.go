@@ -16,22 +16,24 @@ import (
 
 	"github.com/crowdmob/goamz/aws"
 	"github.com/crowdmob/goamz/s3"
-	"github.com/goji/httpauth"
 	"github.com/tv42/base58"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
-	"github.com/zenazn/goji/web/middleware"
 )
 
 var (
 	bucketName string
 	baseURL    string
 	awsRegion  aws.Region
+	username   string
+	password   string
 )
 
 func init() {
 	bucketName = os.Getenv("BUCKET_NAME")
 	baseURL = os.Getenv("BASE_URL")
+	username = os.Getenv("HTTP_USER")
+	password = os.Getenv("HTTP_PASSWORD")
 
 	if os.Getenv("AWS_REGION") == "" {
 		awsRegion = aws.GetRegion("us-east-1")
@@ -203,13 +205,14 @@ func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
 }
 
 func main() {
-	goji.Use(middleware.RealIP)
-
-	username := os.Getenv("HTTP_USER")
-	password := os.Getenv("HTTP_PASSWORD")
-
 	if username != "" && password != "" {
-		goji.Use(httpauth.SimpleBasicAuth(username, password))
+		authOpts := AuthOptions{
+			Realm:    "Restricted",
+			User:     username,
+			Password: password,
+		}
+
+		goji.Use(BasicAuth(authOpts))
 	}
 
 	goji.Use(PropfindInterceptHeader)
