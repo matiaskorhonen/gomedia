@@ -49,18 +49,18 @@ func init() {
 	}
 
 	// Configure Airbrake/Errbit
-	apiKey := os.Getenv("AIRBRAKE_API_KEY")
-	endpoint := os.Getenv("AIRBRAKE_ENDPOINT")
-	environment := os.Getenv("AIRBRAKE_ENVIRONMENT")
+	airbrakeApiKey := os.Getenv("AIRBRAKE_API_KEY")
+	airbrakeEndpoint := os.Getenv("AIRBRAKE_ENDPOINT")
+	airbrakeEnvironment := os.Getenv("AIRBRAKE_ENVIRONMENT")
 	useAirbrake = false
-	if apiKey != "" {
-		airbrake.ApiKey = apiKey
+	if airbrakeApiKey != "" {
+		airbrake.ApiKey = airbrakeApiKey
 		useAirbrake = true
-		if endpoint != "" {
-			airbrake.Endpoint = endpoint
+		if airbrakeEndpoint != "" {
+			airbrake.Endpoint = airbrakeEndpoint
 		}
-		if environment != "" {
-			airbrake.Environment = environment
+		if airbrakeEnvironment != "" {
+			airbrake.Environment = airbrakeEnvironment
 		}
 	}
 }
