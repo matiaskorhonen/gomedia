@@ -48,6 +48,10 @@ git push heroku master
     * If you're using a custom CNAME (or a CDN) set it to the hostname (beginning with http or https)
 * `HTTP_PASSWORD` — (recommended) protect the upload end points with basic auth
 * `HTTP_USER` — (recommended) protect the upload end points with basic auth
+* `AIRBRAKE_API_KEY` — (optional) set this to your Airbrake API key if you want airbrake support
+* `AIRBRAKE_ENDPOINT` — (optional) configure this if you use Errbit (or some other custom endpoint)
+    * e.g. `https://myerribt.herokuapp.com/notifier_api/v2/notices`
+* `AIRBRAKE_ENVIRONMENT` — (optional) set the environment for Airbrake, defaults to `development`
 
 ## Use with Tweetbot
 

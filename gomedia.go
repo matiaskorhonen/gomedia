@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"math/big"
@@ -16,17 +17,19 @@ import (
 
 	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
 	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
+	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tobi/airbrake-go"
 	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
 	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji"
 	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
 )
 
 var (
-	bucketName string
-	baseURL    string
-	awsRegion  aws.Region
-	username   string
-	password   string
+	bucketName  string
+	baseURL     string
+	awsRegion   aws.Region
+	username    string
+	password    string
+	useAirbrake bool
 )
 
 func init() {
@@ -45,8 +48,31 @@ func init() {
 		}
 	}
 
-	// Auth here to ensure that the keys are set
-	aws.EnvAuth()
+	// Configure Airbrake/Errbit
+	apiKey := os.Getenv("AIRBRAKE_API_KEY")
+	endpoint := os.Getenv("AIRBRAKE_ENDPOINT")
+	environment := os.Getenv("AIRBRAKE_ENVIRONMENT")
+	useAirbrake = false
+	if apiKey != "" {
+		airbrake.ApiKey = apiKey
+		useAirbrake = true
+		if endpoint != "" {
+			airbrake.Endpoint = endpoint
+		}
+		if environment != "" {
+			airbrake.Environment = environment
+		}
+	}
+}
+
+func ReportIfAirbake(err error, r *http.Request) {
+	if useAirbrake {
+		if r {
+			airbrake.Error(err, r)
+		} else {
+			airbrake.Notify(err)
+		}
+	}
 }
 
 func OpenBucket() (*s3.Bucket, error) {
@@ -57,7 +83,7 @@ func OpenBucket() (*s3.Bucket, error) {
 	s := s3.New(auth, awsRegion)
 
 	if bucketName == "" {
-		panic("BUCKET_NAME not set")
+		return nil, errors.New("BUCKET_NAME not set")
 	}
 
 	bucket := s.Bucket(bucketName)
@@ -130,6 +156,7 @@ func RootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 func Tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	multiReader, err := r.MultipartReader()
 	if err != nil {
+		ReportIfAirbake(err, r)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -140,13 +167,16 @@ func Tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	// Ensure that the Content-Length is set
 	_, err = strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ReportIfAirbake(err, r)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	url, err := UploadPartToS3(part, "tweetbot/")
 	if err != nil {
-		panic(err.Error())
+		ReportIfAirbake(err, r)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	responseMap := map[string]string{"url": url}
@@ -172,7 +202,9 @@ func WebDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 	url, err := ReaderToS3(r.Body, basePath, originalFilename, false, contentType, r.ContentLength)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ReportIfAirbake(err, r)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	http.Redirect(w, r, url, http.StatusCreated)

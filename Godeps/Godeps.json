@@ -11,6 +11,10 @@
 			"Rev": "5fa6630638856d1dcc32b7770087baf30f6f93cf"
 		},
 		{
+			"ImportPath": "github.com/tobi/airbrake-go",
+			"Rev": "5b5e269e1bc398d43f67e43dafff3414a59cd5a2"
+		},
+		{
 			"ImportPath": "github.com/tv42/base58",
 			"Rev": "b6649477bfe6276322b4eeaae8f5e947b49cec92"
 		},
