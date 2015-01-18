@@ -67,7 +67,7 @@ func init() {
 
 func ReportIfAirbake(err error, r *http.Request) {
 	if useAirbrake {
-		if r {
+		if r != nil {
 			airbrake.Error(err, r)
 		} else {
 			airbrake.Notify(err)
