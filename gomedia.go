@@ -65,7 +65,7 @@ func init() {
 	}
 }
 
-func ReportIfAirbake(err error, r *http.Request) {
+func reportIfAirbake(err error, r *http.Request) {
 	if useAirbrake {
 		if r != nil {
 			airbrake.Error(err, r)
@@ -75,7 +75,7 @@ func ReportIfAirbake(err error, r *http.Request) {
 	}
 }
 
-func OpenBucket() (*s3.Bucket, error) {
+func openBucket() (*s3.Bucket, error) {
 	auth, err := aws.EnvAuth()
 	if err != nil {
 		return nil, err
@@ -90,8 +90,8 @@ func OpenBucket() (*s3.Bucket, error) {
 	return bucket, nil
 }
 
-func ReaderToS3(ioReader io.Reader, basePath string, originalFilename string, generateNewFileName bool, contentType string, contentLength int64) (string, error) {
-	bucket, err := OpenBucket()
+func readerToS3(ioReader io.Reader, basePath string, originalFilename string, generateNewFileName bool, contentType string, contentLength int64) (string, error) {
+	bucket, err := openBucket()
 	if err != nil {
 		return "", err
 	}
@@ -134,7 +134,7 @@ func ReaderToS3(ioReader io.Reader, basePath string, originalFilename string, ge
 	return url, nil
 }
 
-func UploadPartToS3(part *multipart.Part, basePath string) (string, error) {
+func uploadPartToS3(part *multipart.Part, basePath string) (string, error) {
 	originalFilename := part.FileName()
 
 	contentType := part.Header.Get("Content-Type")
@@ -144,19 +144,19 @@ func UploadPartToS3(part *multipart.Part, basePath string) (string, error) {
 		return "", err
 	}
 
-	url, err := ReaderToS3(part, basePath, originalFilename, true, contentType, contentLength)
+	url, err := readerToS3(part, basePath, originalFilename, true, contentType, contentLength)
 
 	return url, err
 }
 
-func RootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
+func rootHandler(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Nothing to see here!")
 }
 
-func Tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
+func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	multiReader, err := r.MultipartReader()
 	if err != nil {
-		ReportIfAirbake(err, r)
+		reportIfAirbake(err, r)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -167,14 +167,14 @@ func Tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	// Ensure that the Content-Length is set
 	_, err = strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
 	if err != nil {
-		ReportIfAirbake(err, r)
+		reportIfAirbake(err, r)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	url, err := UploadPartToS3(part, "tweetbot/")
+	url, err := uploadPartToS3(part, "tweetbot/")
 	if err != nil {
-		ReportIfAirbake(err, r)
+		reportIfAirbake(err, r)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -186,7 +186,7 @@ func Tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, string(jsonResponse))
 }
 
-func WebDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
+func webDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 	// Ensure that the Content-Length is set
 	if r.ContentLength < 1 {
 		http.Error(w, "Content-Length must be set", http.StatusBadRequest)
@@ -199,10 +199,10 @@ func WebDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 
 	basePath := ""
 
-	url, err := ReaderToS3(r.Body, basePath, originalFilename, false, contentType, r.ContentLength)
+	url, err := readerToS3(r.Body, basePath, originalFilename, false, contentType, r.ContentLength)
 
 	if err != nil {
-		ReportIfAirbake(err, r)
+		reportIfAirbake(err, r)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -210,11 +210,11 @@ func WebDavUpload(c web.C, w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, url, http.StatusCreated)
 }
 
-func WebDavDelete(c web.C, w http.ResponseWriter, r *http.Request) {
+func webDavDelete(c web.C, w http.ResponseWriter, r *http.Request) {
 	http.Error(w, "Deleting files is not supported", http.StatusNotImplemented)
 }
 
-func PropfindInterceptHeader(c *web.C, h http.Handler) http.Handler {
+func propfindIntercept(c *web.C, h http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		if r.Method == "PROPFIND" {
 			xml := "<?xml version=\"1.0\" ?>\n" +
@@ -249,15 +249,15 @@ func main() {
 		goji.Use(BasicAuth(authOpts))
 	}
 
-	goji.Use(PropfindInterceptHeader)
+	goji.Use(propfindIntercept)
 
-	goji.Get("/", RootHandler)
+	goji.Get("/", rootHandler)
 
-	goji.Put("/:name", WebDavUpload)
-	goji.Delete("/:name", WebDavDelete)
+	goji.Put("/:name", webDavUpload)
+	goji.Delete("/:name", webDavDelete)
 
 	re := regexp.MustCompile(`\A/tweetbot/?\z`)
-	goji.Post(re, Tweetbot)
+	goji.Post(re, tweetbot)
 
 	goji.Serve()
 }
