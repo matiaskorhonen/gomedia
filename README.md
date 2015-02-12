@@ -81,4 +81,11 @@ For monosnap you need to configure a WebDAV endpoint with the app URL and creden
 
 You need to configure the Base URL in Monosnap regardless of whether you're using a custom base URL or not.
 
+### Recommended
+
+With Monosnap it is recommended to add `%R` to the filename template because the filename cannot be altered server side (thus there's a small chance that the filename will conflict with an existing file in the bucket).
+
+![Advanced Monosnap configuration][advanced]
+
 [monoconf]: http://shots.matiaskorhonen.fi/monosnap-gomedia-configuration_nibjb9.png
+[advanced]: http://shots.matiaskorhonen.fi/Monosnap_advanced.png
