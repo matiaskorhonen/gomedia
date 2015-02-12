@@ -1,6 +1,8 @@
 # GoMedia
 
-Tweetbot custom media endpoint for uploads to S3
+Tweetbot custom media endpoint for uploads to S3, Witten in Go. Heavily influenced by [s3itch][s3itch].
+
+[s3itch]: https://github.com/roidrage/s3itch
 
 ## Install/Build/Deploy
 
