@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/bind"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/graceful"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/bind"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/graceful"
 )
 
 func init() {

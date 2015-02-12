@@ -5,7 +5,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
 )
 
 func TestNoCache(t *testing.T) {

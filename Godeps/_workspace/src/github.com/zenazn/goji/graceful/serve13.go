@@ -7,7 +7,7 @@ import (
 	"net"
 	"net/http"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/graceful/listener"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/graceful/listener"
 )
 
 // This is a slightly hacky shim to disable keepalives when shutting a server

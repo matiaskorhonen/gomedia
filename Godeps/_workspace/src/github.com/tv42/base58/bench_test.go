@@ -4,7 +4,7 @@ import (
 	"math/big"
 	"testing"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
 	"github.com/cmars/basen"
 )
 

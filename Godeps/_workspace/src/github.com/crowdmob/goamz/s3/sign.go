@@ -1,7 +1,7 @@
 package s3
 
 import (
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
 	"crypto/hmac"
 	"crypto/sha1"
 	"encoding/base64"

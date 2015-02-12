@@ -1,7 +1,7 @@
 package s3_test
 
 import (
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
 	"encoding/xml"
 	"gopkg.in/check.v1"
 	"io/ioutil"

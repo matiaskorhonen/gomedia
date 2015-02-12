@@ -1,7 +1,7 @@
 package aws_test
 
 import (
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
 	"fmt"
 	"gopkg.in/check.v1"
 	"net/http"

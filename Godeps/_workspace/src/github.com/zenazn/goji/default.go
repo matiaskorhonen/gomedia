@@ -1,8 +1,8 @@
 package goji
 
 import (
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web/middleware"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web/middleware"
 )
 
 var DefaultMux *web.Mux

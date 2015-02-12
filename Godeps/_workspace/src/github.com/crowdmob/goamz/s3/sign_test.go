@@ -1,8 +1,8 @@
 package s3_test
 
 import (
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
 	"gopkg.in/check.v1"
 )
 

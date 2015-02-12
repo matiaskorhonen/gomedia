@@ -1,7 +1,7 @@
 package s3test
 
 import (
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
 	"bytes"
 	"crypto/md5"
 	"encoding/base64"

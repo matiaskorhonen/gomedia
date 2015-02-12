@@ -7,7 +7,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/graceful/listener"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/graceful/listener"
 )
 
 var mu sync.Mutex // protects everything that follows

@@ -15,12 +15,12 @@ import (
 	"strconv"
 	"time"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tobi/airbrake-go"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji"
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/aws"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/crowdmob/goamz/s3"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tobi/airbrake-go"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
 )
 
 var (

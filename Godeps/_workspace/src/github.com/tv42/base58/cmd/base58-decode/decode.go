@@ -7,7 +7,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/tv42/base58"
 )
 
 var prog = filepath.Base(os.Args[0])

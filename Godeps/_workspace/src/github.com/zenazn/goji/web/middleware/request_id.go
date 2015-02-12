@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync/atomic"
 
-	"bitbucket.org/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
+	"github.com/matiaskorhonen/gomedia/Godeps/_workspace/src/github.com/zenazn/goji/web"
 )
 
 // Key to use when setting the request ID.
