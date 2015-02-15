@@ -49,12 +49,12 @@ func init() {
 	}
 
 	// Configure Airbrake/Errbit
-	airbrakeApiKey := os.Getenv("AIRBRAKE_API_KEY")
+	airbrakeAPIKey := os.Getenv("AIRBRAKE_API_KEY")
 	airbrakeEndpoint := os.Getenv("AIRBRAKE_ENDPOINT")
 	airbrakeEnvironment := os.Getenv("AIRBRAKE_ENVIRONMENT")
 	useAirbrake = false
-	if airbrakeApiKey != "" {
-		airbrake.ApiKey = airbrakeApiKey
+	if airbrakeAPIKey != "" {
+		airbrake.ApiKey = airbrakeAPIKey
 		useAirbrake = true
 		if airbrakeEndpoint != "" {
 			airbrake.Endpoint = airbrakeEndpoint
@@ -161,8 +161,25 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// We only want the first part, the media
-	part, err := multiReader.NextPart()
+	var part *multipart.Part
+	err = nil
+
+	// Find the media part
+	for err == nil {
+		part, err = multiReader.NextPart()
+
+		if err == io.EOF {
+			break
+		} else if err != nil {
+			reportIfAirbake(err, r)
+			http.Error(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+
+		if part.FormName() != "media" {
+			continue
+		}
+	}
 
 	// Ensure that the Content-Length is set
 	_, err = strconv.ParseInt(part.Header.Get("Content-Length"), 10, 64)
