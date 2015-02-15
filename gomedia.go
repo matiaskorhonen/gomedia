@@ -168,16 +168,14 @@ func tweetbot(c web.C, w http.ResponseWriter, r *http.Request) {
 	for err == nil {
 		part, err = multiReader.NextPart()
 
-		if err == io.EOF {
-			break
-		} else if err != nil {
+		if err != nil {
 			reportIfAirbake(err, r)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
-		if part.FormName() != "media" {
-			continue
+		if part.FormName() == "media" {
+			break
 		}
 	}
 
