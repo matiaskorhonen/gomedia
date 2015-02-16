@@ -11,13 +11,13 @@ Tweetbot custom media endpoint for uploads to S3, Witten in Go. Heavily influenc
 If you're creating a new heroku app, set the buildpack on creation:
 
 ```sh
-heroku create -b https://github.com/kr/heroku-buildpack-go.git --region=eu
+heroku create -b https://github.com/heroku/heroku-buildpack-go.git --region=eu
 ```
 
 For an existing Heroku app, set the `BUILDPACK_URL`:
 
 ```sh
-heroku config:set BUILDPACK_URL=https://github.com/kr/heroku-buildpack-go.git
+heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-go.git
 ```
 
 ### Set environment variables
