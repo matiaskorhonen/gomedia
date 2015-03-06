@@ -1,0 +1,50 @@
+{
+  "name": "GoMedia",
+  "description": "Tweetbot custom media endpoint for uploads to S3, written in Go.",
+  "repository": "https://github.com/matiaskorhonen/gomedia",
+  "keywords": ["golang", "go", "tweetbot", "monosnap", "webdav", "s3"],
+  "env": {
+    "BUILDPACK_URL": "https://github.com/heroku/heroku-buildpack-go.git",
+    "AWS_ACCESS_KEY_ID": {
+      "description": "The access key id to your AWS account (IAM keys recommended)",
+      "required": true
+    },
+    "AWS_SECRET_ACCESS_KEY": {
+      "description": "The access key secret to your AWS account",
+      "required": true
+    },
+    "AWS_REGION": {
+      "description": "The AWS region of your bucket",
+      "required": true,
+      "value": "us-east-1"
+    },
+    "BUCKET_NAME": {
+      "description": "The name of your S3 bucket",
+      "required": true
+    },
+    "BASE_URL": {
+      "description": "The base URL for generated URLs (no trailing slash). Defaults to the bucket url.",
+      "required": false
+    },
+    "HTTP_USER": {
+      "description": "Protect the upload endpoints with this username",
+      "required": true
+    },
+    "HTTP_PASSWORD": {
+      "description": "Protect the upload endpoints with this password",
+      "required": true
+    },
+    "AIRBRAKE_API_KEY": {
+      "description": "Set this to your Airbrake API key if you want airbrake support",
+      "required": false
+    },
+    "AIRBRAKE_ENDPOINT": {
+      "description": "Configure this if you use Errbit (or some other custom endpoint)",
+      "required": false
+    },
+    "AIRBRAKE_ENVIRONMENT": {
+      "description": "Set the environment for Airbrake, defaults to `development`",
+      "required": false
+    }
+  }
+}
