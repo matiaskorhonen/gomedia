@@ -1,12 +1,20 @@
 # GoMedia
 
-Tweetbot custom media endpoint for uploads to S3, Witten in Go. Heavily influenced by [s3itch][s3itch].
+Tweetbot custom media endpoint for uploads to S3, written in Go. Heavily influenced by [s3itch][s3itch].
 
 [s3itch]: https://github.com/roidrage/s3itch
 
 ## Install/Build/Deploy
 
-### Configure the buildpack
+### Automatic
+
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+See the *Environment Variables* section below for help with the configuration options.
+
+### Manual procedure
+
+#### Configure the buildpack
 
 If you're creating a new heroku app, set the buildpack on creation:
 
@@ -20,7 +28,7 @@ For an existing Heroku app, set the `BUILDPACK_URL`:
 heroku config:set BUILDPACK_URL=https://github.com/heroku/heroku-buildpack-go.git
 ```
 
-### Set environment variables
+#### Set environment variables
 
 GoMedia uses environment variables for configuration (see all available options below).
 
@@ -33,7 +41,7 @@ AWS_REGION="eu-west-1" BUCKET_NAME="mybucket"
 
 It is highly recommended that you also set a username and password (for the obvious reasons).
 
-### Push to Heroku
+#### Push to Heroku
 
 ```sh
 git push heroku master
@@ -48,8 +56,8 @@ git push heroku master
 * `BASE_URL` — (optional) the base URL for generated URLs (no trailing slash)
     * Defaults to the bucket url (e.g. `https://s3-eu-west-1.amazonaws.com/BUCKET_NAME/`)
     * If you're using a custom CNAME (or a CDN) set it to the hostname (beginning with http or https)
-* `HTTP_PASSWORD` — (recommended) protect the upload end points with basic auth
-* `HTTP_USER` — (recommended) protect the upload end points with basic auth
+* `HTTP_PASSWORD` — (recommended) protect the upload endpoints with basic auth
+* `HTTP_USER` — (recommended) protect the upload endpoints with basic auth
 * `AIRBRAKE_API_KEY` — (optional) set this to your Airbrake API key if you want airbrake support
 * `AIRBRAKE_ENDPOINT` — (optional) configure this if you use Errbit (or some other custom endpoint)
     * e.g. `https://myerribt.herokuapp.com/notifier_api/v2/notices`
